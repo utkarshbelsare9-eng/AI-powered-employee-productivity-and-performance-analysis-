@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Leave Requests{% endblock %}
+{% block page_title %}Leave Requests{% endblock %}
+{% block page_subtitle %}Review and approve employee leave applications{% endblock %}
+
+{% block content %}
+<div class="card-glass">
+  <table class="table-modern">
+    <thead><tr><th>Employee</th><th>Dates</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for l in leaves %}
+      <tr>
+        <td><div class="d-flex align-items-center gap-2"><div class="avatar-circle">{{ l.employee.name[0] }}</div>{{ l.employee.name }}</div></td>
+        <td>{{ l.start_date.strftime('%d %b') }} - {{ l.end_date.strftime('%d %b %Y') }}</td>
+        <td>{{ l.reason or '-' }}</td>
+        <td><span class="badge-soft badge-soft-{{ 'success' if l.status=='Approved' else ('danger' if l.status=='Rejected' else 'warning') }}">{{ l.status }}</span></td>
+        <td>
+          {% if l.status == 'Pending' %}
+          <form method="POST" action="{{ url_for('admin.review_leave', leave_id=l.id, action='approve') }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-outline-soft text-success"><i class="fa-solid fa-check"></i></button>
+          </form>
+          <form method="POST" action="{{ url_for('admin.review_leave', leave_id=l.id, action='reject') }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-outline-soft text-danger"><i class="fa-solid fa-xmark"></i></button>
+          </form>
+          {% else %}
+          <span class="text-muted" style="font-size:12px;">Reviewed</span>
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5"><div class="empty-state"><i class="fa-solid fa-plane-departure"></i><p>No leave requests.</p></div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

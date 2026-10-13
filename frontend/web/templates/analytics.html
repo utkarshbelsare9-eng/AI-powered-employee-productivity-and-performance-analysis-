@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+{% block page_title %}Analytics Dashboard{% endblock %}
+{% block page_subtitle %}Company-wide performance and attendance insights{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="card-glass h-100">
+      <h6 class="mb-3">Department Performance Comparison</h6>
+      <canvas id="deptBar" height="230"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card-glass h-100">
+      <h6 class="mb-3">Performance Grade Distribution</h6>
+      <canvas id="gradePie" height="230"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="card-glass h-100">
+      <h6 class="mb-3">Monthly Performance Trend</h6>
+      <canvas id="trendLine" height="220"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card-glass h-100">
+      <h6 class="mb-3">Attendance — Last 30 Days</h6>
+      <canvas id="attLine" height="220"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card-glass h-100">
+      <h6 class="mb-3">Top 10 Performers</h6>
+      <table class="table-modern">
+        <thead><tr><th>#</th><th>Employee</th><th>Score</th></tr></thead>
+        <tbody>
+        {% for name, score in top10 %}
+          <tr><td>{{ loop.index }}</td><td>{{ name }}</td><td><span class="badge-soft badge-soft-primary">{{ score|round(1) }}</span></td></tr>
+        {% else %}
+          <tr><td colspan="3" class="text-center text-muted py-3">No data yet</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card-glass h-100">
+      <h6 class="mb-3">Department Radar — Avg Score</h6>
+      <canvas id="radarChart" height="250"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+const palette = ['#6C5CE7','#00CEC9','#FD79A8','#FDCB6E','#4834d4','#00B894','#e17055'];
+
+fetch("{{ url_for('api.department_performance') }}").then(r=>r.json()).then(data=>{
+  new Chart(document.getElementById('deptBar'), {
+    type:'bar',
+    data:{ labels:data.labels, datasets:[{label:'Avg Score', data:data.values, backgroundColor: palette, borderRadius:8}]},
+    options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,max:100}} }
+  });
+  new Chart(document.getElementById('radarChart'), {
+    type:'radar',
+    data:{ labels:data.labels, datasets:[{label:'Avg Performance', data:data.values, backgroundColor:'rgba(108,92,231,0.25)', borderColor:'#6C5CE7', pointBackgroundColor:'#6C5CE7'}]},
+    options:{ scales:{ r:{ suggestedMin:0, suggestedMax:100 } } }
+  });
+});
+
+fetch("{{ url_for('api.grade_distribution') }}").then(r=>r.json()).then(data=>{
+  new Chart(document.getElementById('gradePie'), {
+    type:'pie',
+    data:{ labels:data.labels, datasets:[{data:data.values, backgroundColor:['#00B894','#6C5CE7','#FDCB6E','#FF6B6B']}]},
+    options:{ plugins:{legend:{position:'bottom'}} }
+  });
+});
+
+fetch("{{ url_for('api.monthly_trend') }}").then(r=>r.json()).then(data=>{
+  new Chart(document.getElementById('trendLine'), {
+    type:'line',
+    data:{ labels:data.labels, datasets:[{label:'Avg Performance Score', data:data.values, borderColor:'#6C5CE7', backgroundColor:'rgba(108,92,231,0.12)', fill:true, tension:0.35}]},
+    options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,max:100}} }
+  });
+});
+
+fetch("{{ url_for('api.attendance_trend') }}").then(r=>r.json()).then(data=>{
+  new Chart(document.getElementById('attLine'), {
+    type:'line',
+    data:{ labels:data.labels, datasets:[{label:'Present Count', data:data.values, borderColor:'#00CEC9', backgroundColor:'rgba(0,206,201,0.12)', fill:true, tension:0.35}]},
+    options:{ plugins:{legend:{display:false}} }
+  });
+});
+</script>
+{% endblock %}

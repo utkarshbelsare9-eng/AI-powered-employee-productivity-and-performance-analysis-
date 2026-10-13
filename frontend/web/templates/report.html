@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reports Center{% endblock %}
+{% block page_subtitle %}Generate and download PDF/Excel reports{% endblock %}
+
+{% block content %}
+{% if current_user.is_admin or current_user.is_manager %}
+<div class="card-glass mb-4">
+  <h6 class="mb-3"><i class="fa-solid fa-building me-2 text-primary"></i>Company-Wide Report</h6>
+  <p class="text-muted" style="font-size:13px;">Export the current month's performance data for all {{ 'team members' if current_user.is_manager else 'employees' }}.</p>
+  <a href="{{ url_for('reports.company_report_excel') }}" class="btn btn-gradient"><i class="fa-solid fa-file-excel me-1"></i>Download Excel Report</a>
+</div>
+{% endif %}
+
+<div class="card-glass">
+  <h6 class="mb-3"><i class="fa-solid fa-user me-2 text-primary"></i>Individual Employee Reports</h6>
+  <table class="table-modern">
+    <thead><tr><th>Employee</th><th>Department</th><th>Formats</th></tr></thead>
+    <tbody>
+    {% for e in employees %}
+      <tr>
+        <td><div class="d-flex align-items-center gap-2"><div class="avatar-circle">{{ e.name[0] }}</div>{{ e.name }}</div></td>
+        <td>{{ e.department.name if e.department else '-' }}</td>
+        <td>
+          <a href="{{ url_for('reports.employee_report_pdf', emp_id=e.id) }}" class="btn btn-sm btn-outline-soft"><i class="fa-solid fa-file-pdf text-danger me-1"></i>PDF</a>
+          <a href="{{ url_for('reports.employee_report_excel', emp_id=e.id) }}" class="btn btn-sm btn-outline-soft"><i class="fa-solid fa-file-excel text-success me-1"></i>Excel</a>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="3"><div class="empty-state"><i class="fa-solid fa-file-export"></i><p>No employees available.</p></div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block page_subtitle %}Stay updated on important alerts{% endblock %}
+
+{% block content %}
+<div class="card-glass">
+  {% for n in notifications %}
+  <div class="d-flex align-items-start gap-3 mb-3 p-3 rounded-3" style="background:var(--bg-body);">
+    <div class="avatar-circle" style="background:linear-gradient(135deg,{{ '#FF6B6B,#D63031' if n.category=='danger' else ('#FDCB6E,#e1a63e' if n.category=='warning' else '#6C5CE7,#8C7AE6') }});">
+      <i class="fa-solid {{ 'fa-triangle-exclamation' if n.category in ['danger','warning'] else 'fa-bell' }}"></i>
+    </div>
+    <div class="flex-grow-1">
+      <div class="fw-semibold" style="font-size:13.5px;">{{ n.title }}</div>
+      <div class="text-muted" style="font-size:12.5px;">{{ n.message }}</div>
+      <div class="text-muted" style="font-size:11px;">{{ n.created_at.strftime('%d %b %Y %H:%M') }}</div>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state"><i class="fa-solid fa-bell-slash"></i><p>No notifications yet.</p></div>
+  {% endfor %}
+</div>
+{% endblock %}

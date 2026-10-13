@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin / Manager Sign Up - ProductivityAI</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="d-flex min-vh-100 align-items-center justify-content-center" style="background-color: var(--bg-body); padding: 20px;">
+  <div class="auth-form-side" style="flex: 0 0 auto; width: 100%; max-width: 640px; border-radius: var(--radius-lg); box-shadow: var(--shadow-soft);">
+    <div class="auth-card animate-in" style="max-width:560px;">
+      <h3 class="mb-1">Create Admin / Manager Account</h3>
+      <p class="text-muted mb-4" style="font-size:14px;">
+        Employee accounts are not available through this registration page.
+      </p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+          <div class="alert alert-{{ category }} border-0 rounded-3" role="alert">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="alert alert-warning border-0 rounded-3" style="font-size:12.5px;">
+        <i class="fa-solid fa-circle-info me-1"></i>
+        New accounts remain <strong>Pending</strong> until an existing administrator approves them.
+      </div>
+
+      <form method="POST" action="{{ url_for('auth.signup') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:13px;">Account Type</label>
+          <div class="row g-2">
+            <div class="col-6">
+              <input class="btn-check" type="radio" name="role" id="roleManager" value="manager" checked>
+              <label class="btn btn-outline-primary w-100 py-2" for="roleManager">
+                <i class="fa-solid fa-user-tie me-1"></i> Manager
+              </label>
+            </div>
+            <div class="col-6">
+              <input class="btn-check" type="radio" name="role" id="roleAdmin" value="admin">
+              <label class="btn btn-outline-danger w-100 py-2" for="roleAdmin">
+                <i class="fa-solid fa-user-shield me-1"></i> Admin
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:13px;">Full Name</label>
+          <input type="text" class="form-control" name="name" maxlength="120" placeholder="Enter full name" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:13px;">Username</label>
+          <input type="text" class="form-control" name="username" maxlength="80" placeholder="Choose a username" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:13px;">Email</label>
+          <input type="email" class="form-control" name="email" maxlength="120" placeholder="name@company.com" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size:13px;">Department <span class="text-muted">(optional for Admin)</span></label>
+          <select class="form-select" name="department_id">
+            <option value="">Select department</option>
+            {% for d in departments %}
+              <option value="{{ d.id }}">{{ d.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold" style="font-size:13px;">Password</label>
+            <input type="password" class="form-control" name="password" minlength="8" placeholder="Minimum 8 characters" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold" style="font-size:13px;">Confirm Password</label>
+            <input type="password" class="form-control" name="confirm_password" minlength="8" placeholder="Repeat password" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-gradient w-100 py-2 mt-4">
+          Submit Registration <i class="fa-solid fa-user-plus ms-1"></i>
+        </button>
+      </form>
+
+      <div class="text-center mt-3">
+        <a href="{{ url_for('auth.login') }}" style="font-size:13px;color:var(--brand-primary);">
+          <i class="fa-solid fa-arrow-left me-1"></i>Back to Sign In
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

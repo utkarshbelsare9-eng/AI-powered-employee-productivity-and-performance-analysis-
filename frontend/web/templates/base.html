@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ current_user.theme if current_user.is_authenticated else 'light' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% if current_user.is_authenticated %}<meta name="csrf-token" content="{{ csrf_token() }}">{% endif %}
+  <title>{% block title %}Dashboard{% endblock %} · ProductivityAI</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+<div class="app-shell">
+
+  {% if current_user.is_authenticated %}
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo-icon"><i class="fa-solid fa-chart-line"></i></div>
+      <div class="brand-text">
+        <strong>ProductivityAI</strong>
+        <span>HR Analytics Suite</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="sidebar-link {{ 'active' if request.endpoint == 'dashboard.index' }}" href="{{ url_for('dashboard.index') }}">
+        <i class="fa-solid fa-gauge-high"></i> Dashboard
+      </a>
+
+      <div class="sidebar-section-label">Workforce</div>
+      <a class="sidebar-link {{ 'active' if request.endpoint in ['employees.list_employees','employees.view_employee'] }}" href="{{ url_for('employees.list_employees') }}">
+        <i class="fa-solid fa-users"></i> Employees
+      </a>
+      {% if current_user.is_admin %}
+      <a class="sidebar-link {{ 'active' if request.endpoint == 'employees.departments' }}" href="{{ url_for('employees.departments') }}">
+        <i class="fa-solid fa-sitemap"></i> Departments
+      </a>
+      {% endif %}
+      <a class="sidebar-link {{ 'active' if request.endpoint == 'attendance.list_attendance' }}" href="{{ url_for('attendance.list_attendance') }}">
+        <i class="fa-solid fa-calendar-check"></i> Attendance
+      </a>
+      <a class="sidebar-link {{ 'active' if request.endpoint in ['tasks.list_tasks','tasks.add_task'] }}" href="{{ url_for('tasks.list_tasks') }}">
+        <i class="fa-solid fa-list-check"></i> Tasks
+      </a>
+      {% if current_user.is_admin or current_user.is_manager %}
+      <a class="sidebar-link {{ 'active' if request.endpoint == 'admin.list_leaves' }}" href="{{ url_for('admin.list_leaves') }}">
+        <i class="fa-solid fa-plane-departure"></i> Leave Requests
+      </a>
+      {% endif %}
+
+      <div class="sidebar-section-label">AI Insights</div>
+      {% if current_user.is_admin or current_user.is_manager %}
+      <a class="sidebar-link {{ 'active' if request.endpoint == 'analytics.analytics' }}" href="{{ url_for('analytics.analytics') }}">
+        <i class="fa-solid fa-chart-pie"></i> Analytics
+      </a>
+      {% endif %}
+      <a class="sidebar-link {{ 'active' if request.endpoint == 'prediction.prediction' }}" href="{{ url_for('prediction.prediction') }}">
+        <i class="fa-solid fa-brain"></i> AI Prediction
+      </a>
+      <a class="sidebar-link {{ 'active' if request.endpoint == 'prediction.recommendation' }}" href="{{ url_for('prediction.recommendation') }}">
+        <i class="fa-solid fa-lightbulb"></i> Recommendations
+      </a>
+
+      <div class="sidebar-section-label">Reports</div>
+      <a class="sidebar-link {{ 'active' if request.endpoint == 'reports.reports_home' }}" href="{{ url_for('reports.reports_home') }}">
+        <i class="fa-solid fa-file-export"></i> Reports
+      </a>
+
+      <div class="sidebar-section-label">Account</div>
+      <a class="sidebar-link {{ 'active' if request.endpoint == 'profile.my_profile' }}" href="{{ url_for('profile.my_profile') }}">
+        <i class="fa-solid fa-id-badge"></i> My Profile
+      </a>
+      <a class="sidebar-link {{ 'active' if request.endpoint == 'profile.settings' }}" href="{{ url_for('profile.settings') }}">
+        <i class="fa-solid fa-gear"></i> Settings
+      </a>
+      {% if current_user.is_admin %}
+      <a class="sidebar-link {{ 'active' if request.endpoint == 'admin.admin_home' }}" href="{{ url_for('admin.admin_home') }}">
+        <i class="fa-solid fa-user-shield"></i> Admin Panel
+      </a>
+      {% endif %}
+      <a class="sidebar-link" href="{{ url_for('auth.logout') }}">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+      </a>
+    </nav>
+  </aside>
+  {% endif %}
+
+  <div class="main-content">
+    {% if current_user.is_authenticated %}
+    <header class="topbar">
+      <div class="d-flex align-items-center gap-3">
+        <button class="icon-btn d-lg-none" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+        <div>
+          <p class="page-title">{% block page_title %}Dashboard{% endblock %}</p>
+          <p class="page-subtitle">{% block page_subtitle %}Welcome back, here's what's happening today.{% endblock %}</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        {% if current_user.is_employee %}
+        <span id="activityStatusPill" class="activity-pill activity-idle" title="Tracks mouse & keyboard activity while this page is open">
+          <i class="fa-regular fa-circle"></i> Idle
+        </span>
+        <span class="activity-hours-chip" title="Active hours tracked today">
+          <i class="fa-solid fa-clock"></i> <span id="activityHoursToday">0.00h</span> today
+        </span>
+        {% endif %}
+        <a class="icon-btn" id="themeToggle" title="Toggle theme">
+          <i class="fa-solid {{ 'fa-sun' if current_user.theme == 'dark' else 'fa-moon' }}"></i>
+        </a>
+        <a class="icon-btn" href="{{ url_for('admin.list_notifications') }}" title="Notifications">
+          <i class="fa-solid fa-bell"></i>
+          {% if unread_notifications and unread_notifications > 0 %}
+          <span class="badge-dot">{{ unread_notifications }}</span>
+          {% endif %}
+        </a>
+        <a class="user-chip" href="{{ url_for('profile.my_profile') }}">
+          <img src="{{ url_for('static', filename='images/default_avatar.png') }}" alt="avatar">
+          <div>
+            <div class="u-name">{{ current_user.username }}</div>
+            <div class="u-role">{{ current_user.role }}</div>
+          </div>
+        </a>
+      </div>
+    </header>
+    {% endif %}
+
+    <main class="{{ 'page-body' if current_user.is_authenticated else '' }}">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="toast-container position-fixed top-0 end-0 p-3">
+          </div>
+          {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm border-0 rounded-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.3/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% if current_user.is_authenticated and current_user.is_employee %}
+<script src="{{ url_for('static', filename='js/activity_tracker.js') }}"></script>
+{% endif %}
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

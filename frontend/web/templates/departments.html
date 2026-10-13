@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Departments{% endblock %}
+{% block page_title %}Department Management{% endblock %}
+{% block page_subtitle %}Organize your workforce into departments{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card-glass">
+      <h6 class="mb-3">Add Department</h6>
+      <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3">
+          <label class="form-label">Department Name</label>
+          <input type="text" class="form-control" name="name" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Description</label>
+          <textarea class="form-control" name="description" rows="3"></textarea>
+        </div>
+        <button class="btn btn-gradient w-100" type="submit"><i class="fa-solid fa-plus me-1"></i>Create Department</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card-glass">
+      <h6 class="mb-3">All Departments</h6>
+      <table class="table-modern">
+        <thead><tr><th>Name</th><th>Employees</th><th>Description</th><th></th></tr></thead>
+        <tbody>
+        {% for d in departments %}
+          <tr>
+            <td class="fw-semibold">{{ d.name }}</td>
+            <td><span class="badge-soft badge-soft-primary">{{ d.employees|length }}</span></td>
+            <td class="text-muted">{{ d.description or '-' }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('employees.delete_department', dept_id=d.id) }}" onsubmit="return confirm('Delete this department?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-soft text-danger"><i class="fa-solid fa-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4"><div class="empty-state"><i class="fa-solid fa-sitemap"></i><p>No departments yet.</p></div></td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

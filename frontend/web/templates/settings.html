@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block page_subtitle %}Manage your account preferences and security{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card-glass mb-3">
+      <h6 class="mb-3"><i class="fa-solid fa-lock me-2 text-primary"></i>Change Password</h6>
+      <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="change_password">
+        <div class="mb-2">
+          <label class="form-label" style="font-size:13px;">Current Password</label>
+          <input type="password" class="form-control" name="current_password" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label" style="font-size:13px;">New Password</label>
+          <input type="password" class="form-control" name="new_password" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" style="font-size:13px;">Confirm New Password</label>
+          <input type="password" class="form-control" name="confirm_password" required>
+        </div>
+        <button type="submit" class="btn btn-gradient">Update Password</button>
+      </form>
+    </div>
+
+    <div class="card-glass">
+      <h6 class="mb-3"><i class="fa-solid fa-image me-2 text-primary"></i>Profile Picture</h6>
+      <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="update_picture">
+        <input type="file" class="form-control mb-3" name="profile_picture" accept=".png,.jpg,.jpeg">
+        <button type="submit" class="btn btn-outline-soft">Upload Picture</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card-glass">
+      <h6 class="mb-3"><i class="fa-solid fa-sliders me-2 text-primary"></i>Preferences</h6>
+      <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="update_preferences">
+        <div class="mb-3">
+          <label class="form-label" style="font-size:13px;">Theme</label>
+          <select class="form-select" name="theme">
+            <option value="light" {{ 'selected' if current_user.theme=='light' }}>Light</option>
+            <option value="dark" {{ 'selected' if current_user.theme=='dark' }}>Dark Mode</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" style="font-size:13px;">Language</label>
+          <select class="form-select" name="language">
+            <option value="en" {{ 'selected' if current_user.language=='en' }}>English</option>
+            <option value="hi" {{ 'selected' if current_user.language=='hi' }}>Hindi</option>
+            <option value="es" {{ 'selected' if current_user.language=='es' }}>Spanish</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-gradient">Save Preferences</button>
+      </form>
+    </div>
+
+    <div class="card-glass mt-3">
+      <h6 class="mb-2"><i class="fa-solid fa-desktop me-2 text-primary"></i>Desktop Activity Tracker</h6>
+      <p class="text-muted" style="font-size:13px;">
+        Optional system-wide collection for keyboard/mouse activity. The tracker stores counts only —
+        it does <strong>not</strong> record typed text, actual key values, clipboard contents, screenshots, or window titles.
+      </p>
+      <a href="{{ url_for('activity.agent_setup') }}" class="btn btn-outline-soft">
+        <i class="fa-solid fa-shield-halved me-1"></i>Configure Desktop Tracker
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

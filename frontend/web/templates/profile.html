@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block page_title %}{{ 'My Profile' if is_own_profile else emp.name + "'s Profile" }}{% endblock %}
+{% block page_subtitle %}Full employee record, history and achievements{% endblock %}
+
+{% block content %}
+{% if not emp %}
+  <div class="empty-state"><i class="fa-solid fa-user-slash"></i><p>No employee profile linked to this account.</p></div>
+{% else %}
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card-glass text-center">
+      <div class="avatar-circle mx-auto mb-3" style="width:80px;height:80px;font-size:28px;">{{ emp.name[0] }}</div>
+      <h5 class="mb-0">{{ emp.name }}</h5>
+      <p class="text-muted mb-2" style="font-size:13px;">{{ emp.designation }}</p>
+      <span class="badge-soft badge-soft-{{ 'success' if emp.status=='Active' else 'warning' }}">{{ emp.status }}</span>
+
+      <hr>
+      <div class="text-start" style="font-size:13px;">
+        <p><i class="fa-solid fa-hashtag text-muted me-2"></i>{{ emp.employee_code }}</p>
+        <p><i class="fa-solid fa-envelope text-muted me-2"></i>{{ emp.email }}</p>
+        <p><i class="fa-solid fa-phone text-muted me-2"></i>{{ emp.phone or '-' }}</p>
+        <p><i class="fa-solid fa-building text-muted me-2"></i>{{ emp.department.name if emp.department else '-' }}</p>
+        <p><i class="fa-solid fa-user-tie text-muted me-2"></i>Manager: {{ emp.manager.name if emp.manager else '-' }}</p>
+        <p><i class="fa-solid fa-calendar text-muted me-2"></i>Joined {{ emp.joining_date.strftime('%d %b %Y') if emp.joining_date else '-' }}</p>
+        <p><i class="fa-solid fa-graduation-cap text-muted me-2"></i>{{ emp.education or '-' }}</p>
+        <p><i class="fa-solid fa-briefcase text-muted me-2"></i>{{ emp.experience_years }} yrs experience</p>
+        <p><i class="fa-solid fa-location-dot text-muted me-2"></i>{{ emp.address or '-' }}</p>
+      </div>
+
+      <a href="{{ url_for('reports.employee_report_pdf', emp_id=emp.id) }}" class="btn btn-outline-soft w-100 mt-2"><i class="fa-solid fa-file-pdf me-1"></i>Download Report</a>
+    </div>
+
+    <div class="card-glass mt-3">
+      <h6 class="mb-3">Skills</h6>
+      {% for s in emp.skills %}
+      <div class="mb-2">
+        <div class="d-flex justify-content-between" style="font-size:12.5px;"><span>{{ s.name }}</span><span>{{ s.proficiency }}%</span></div>
+        <div class="progress-thin"><div class="bar" style="width:{{ s.proficiency }}%"></div></div>
+      </div>
+      {% else %}
+      <p class="text-muted mb-0" style="font-size:13px;">No skills recorded.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <ul class="nav nav-tabs mb-3" id="profileTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview-pane" type="button" role="tab">Overview</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="timesheets-tab" data-bs-toggle="tab" data-bs-target="#timesheets-pane" type="button" role="tab">Timesheets</button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="profileTabsContent">
+    <div class="tab-pane fade show active" id="overview-pane" role="tabpanel">
+    <div class="card-glass mb-3">
+      <h6 class="mb-3"><i class="fa-solid fa-trophy text-warning me-2"></i>Achievements</h6>
+      <div class="row g-2">
+        {% for a in emp.achievements %}
+        <div class="col-md-6">
+          <div class="d-flex align-items-center gap-3 p-3 rounded-3" style="background:var(--bg-body);">
+            <div class="avatar-circle" style="background:linear-gradient(135deg,#FDCB6E,#e1a63e);"><i class="fa-solid {{ a.icon }}"></i></div>
+            <div>
+              <div class="fw-semibold" style="font-size:13.5px;">{{ a.title }}</div>
+              <div class="text-muted" style="font-size:11.5px;">{{ a.date_awarded.strftime('%d %b %Y') if a.date_awarded else '' }}</div>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0" style="font-size:13px;">No achievements yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card-glass mb-3">
+      <h6 class="mb-3">Performance History</h6>
+      <table class="table-modern">
+        <thead><tr><th>Month</th><th>Attendance</th><th>Task Completion</th><th>Productivity</th><th>Grade</th></tr></thead>
+        <tbody>
+        {% for p in emp.performances|sort(attribute='month', reverse=True) %}
+          <tr>
+            <td>{{ p.month }}</td>
+            <td>{{ p.attendance_percent }}%</td>
+            <td>{{ p.task_completion_rate }}%</td>
+            <td>{{ p.productivity_score }}</td>
+            <td><span class="badge-soft badge-soft-{{ 'success' if p.performance_grade=='Excellent' else ('primary' if p.performance_grade=='Good' else ('warning' if p.performance_grade=='Average' else 'danger')) }}">{{ p.performance_grade }}</span></td>
+          </tr>
+        {% else %}
+          <tr><td colspan="5" class="text-center text-muted py-3">No performance history.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-glass">
+      <h6 class="mb-3">Recent Task History</h6>
+      <table class="table-modern">
+        <thead><tr><th>Title</th><th>Status</th><th>Progress</th><th>Deadline</th></tr></thead>
+        <tbody>
+        {% for t in emp.tasks[:10] %}
+          <tr>
+            <td>{{ t.title }}</td>
+            <td><span class="badge-soft badge-soft-{{ 'success' if t.status=='Completed' else 'secondary' }}">{{ t.status }}</span></td>
+            <td style="min-width:110px;"><div class="progress-thin"><div class="bar" style="width:{{ t.completed_percent }}%"></div></div></td>
+            <td>{{ t.deadline.strftime('%d %b') if t.deadline else '-' }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4" class="text-center text-muted py-3">No task history.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <div class="tab-pane fade" id="timesheets-pane" role="tabpanel">
+      <div class="card-glass mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="mb-0">Time and Attendance</h6>
+        </div>
+        <table class="table-modern" id="timesheetTable">
+          <thead>
+            <tr><th>Date</th><th>Clock-In</th><th>Clock-Out</th><th>Office Time</th><th>All Activities</th><th>Computer Activities</th><th>Productive</th></tr>
+          </thead>
+          <tbody>
+          {% for r in timesheet_rows %}
+            <tr class="timesheet-row {{ 'selected' if loop.first }}" data-date="{{ r.date.isoformat() }}" style="cursor:pointer;">
+              <td>{{ r.date.strftime('%b %d') }}</td>
+              <td>{{ r.check_in.strftime('%H:%M') if r.check_in else '-' }}</td>
+              <td>{{ r.check_out.strftime('%H:%M') if r.check_out else '-' }}</td>
+              <td>{{ '%.2fh'|format(r.office_hours) if r.office_hours is not none else '-' }}</td>
+              <td>{{ '%.2fh'|format(r.all_activities_hours) }}</td>
+              <td>{{ '%.2fh'|format(r.computer_activities_hours) }}</td>
+              <td>{{ '%.2fh'|format(r.productive_hours) }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-calendar-xmark"></i><p>No timesheet data yet.</p></div></td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card-glass">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="mb-0">Timeline — <span id="timelineDateLabel">{{ timesheet_rows[0].date.strftime('%b %d') if timesheet_rows }}</span></h6>
+          <div class="d-flex gap-3" style="font-size:11.5px;">
+            <span><span class="legend-dot legend-productive"></span> Productive</span>
+            <span><span class="legend-dot legend-active"></span> Active</span>
+            <span><span class="legend-dot legend-idle"></span> Idle / No data</span>
+          </div>
+        </div>
+        <div class="timeline-track" id="timelineTrack"></div>
+        <div class="timeline-ruler">
+          <span>00:00</span><span>03:00</span><span>06:00</span><span>09:00</span>
+          <span>12:00</span><span>15:00</span><span>18:00</span><span>21:00</span><span>24:00</span>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  const employeeId = {{ emp.id if emp else 'null' }};
+  const track = document.getElementById("timelineTrack");
+  const dateLabel = document.getElementById("timelineDateLabel");
+  if (!track || !employeeId) return;
+
+  function stateColor(state) {
+    if (state === "productive") return "var(--brand-primary)";
+    if (state === "active") return "#00CEC9";
+    return "transparent";
+  }
+
+  function renderTimeline(dateStr) {
+    fetch(`/api/activity/timeline/${employeeId}?date=${dateStr}`, { credentials: "same-origin" })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data) return;
+        track.innerHTML = "";
+        data.blocks.forEach(b => {
+          const div = document.createElement("div");
+          div.className = "timeline-block";
+          div.style.left = (b.start / 1440 * 100) + "%";
+          div.style.width = Math.max((b.end - b.start) / 1440 * 100, 0.2) + "%";
+          div.style.background = stateColor(b.state);
+          div.title = `${b.state} (${String(Math.floor(b.start/60)).padStart(2,'0')}:${String(b.start%60).padStart(2,'0')})`;
+          track.appendChild(div);
+        });
+      })
+      .catch(() => {});
+  }
+
+  document.querySelectorAll(".timesheet-row").forEach(row => {
+    row.addEventListener("click", () => {
+      document.querySelectorAll(".timesheet-row").forEach(r => r.classList.remove("selected"));
+      row.classList.add("selected");
+      const d = row.getAttribute("data-date");
+      dateLabel.textContent = d;
+      renderTimeline(d);
+    });
+  });
+
+  const firstRow = document.querySelector(".timesheet-row");
+  if (firstRow) renderTimeline(firstRow.getAttribute("data-date"));
+})();
+</script>
+{% endblock %}

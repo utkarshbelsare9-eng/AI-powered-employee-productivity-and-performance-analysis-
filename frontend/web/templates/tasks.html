@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Tasks{% endblock %}
+{% block page_title %}Task Management{% endblock %}
+{% block page_subtitle %}Assign, track and complete work items{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    {% if employees is not none %}
+    <form class="d-flex gap-2" method="GET">
+      <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="">All Status</option>
+        {% for s in ['Pending','In Progress','Completed','Delayed'] %}
+        <option value="{{ s }}" {{ 'selected' if status==s }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    {% endif %}
+  </div>
+  {% if current_user.is_admin or current_user.is_manager %}
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('tasks.upload_tasks') }}" class="btn btn-outline-soft"><i class="fa-solid fa-upload me-1"></i>Upload CSV</a>
+    <a href="{{ url_for('tasks.add_task') }}" class="btn btn-gradient"><i class="fa-solid fa-plus me-1"></i>Assign Task</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="card-glass">
+  <table class="table-modern">
+    <thead><tr>
+      <th>Title</th>{% if employees is not none %}<th>Employee</th>{% endif %}<th>Category</th><th>Priority</th><th>Status</th><th>Progress</th><th>Deadline</th><th>Actions</th>
+    </tr></thead>
+    <tbody>
+    {% for t in tasks %}
+      <tr>
+        <td>{{ t.title }}</td>
+        {% if employees is not none %}<td>{{ t.employee.name }}</td>{% endif %}
+        <td>{{ t.category or '-' }}</td>
+        <td><span class="badge-soft badge-soft-{{ 'danger' if t.priority in ['High','Critical'] else 'secondary' }}">{{ t.priority }}</span></td>
+        <td><span class="badge-soft badge-soft-{{ 'success' if t.status=='Completed' else ('warning' if t.status=='In Progress' else ('danger' if t.status=='Delayed' else 'secondary')) }}">{{ t.status }}</span></td>
+        <td style="min-width:110px;"><div class="progress-thin"><div class="bar" style="width:{{ t.completed_percent }}%"></div></div></td>
+        <td>{{ t.deadline.strftime('%d %b') if t.deadline else '-' }}</td>
+        <td>
+          <button type="button" class="btn btn-sm btn-outline-soft" data-bs-toggle="modal" data-bs-target="#taskModal{{ t.id }}"><i class="fa-solid fa-pen"></i></button>
+        </td>
+      </tr>
+
+      <div class="modal fade" id="taskModal{{ t.id }}" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form method="POST" action="{{ url_for('tasks.update_task_status', task_id=t.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <div class="modal-header"><h6 class="modal-title">Update: {{ t.title }}</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label class="form-label">Status</label>
+                  <select name="status" class="form-select">
+                    {% for s in ['Pending','In Progress','Completed','Delayed'] %}
+                    <option value="{{ s }}" {{ 'selected' if t.status==s }}>{{ s }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Completed % <span id="lbl{{ t.id }}">{{ t.completed_percent }}%</span></label>
+                  <input type="range" class="form-range" name="completed_percent" min="0" max="100" value="{{ t.completed_percent }}" data-live-label="#lbl{{ t.id }}">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Actual Hours</label>
+                  <input type="number" step="0.1" class="form-control" name="actual_hours" value="{{ t.actual_hours }}">
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-gradient">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-list-check"></i><p>No tasks found.</p></div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

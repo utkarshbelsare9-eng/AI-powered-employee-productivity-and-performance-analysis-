@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if employee else 'Add' }} Employee{% endblock %}
+{% block page_title %}{{ 'Edit' if employee else 'Add' }} Employee{% endblock %}
+{% block page_subtitle %}{{ 'Update employee record' if employee else 'Create a new employee profile' }}{% endblock %}
+
+{% block content %}
+<div class="card-glass" style="max-width:900px;">
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-control" name="name" value="{{ employee.name if employee else '' }}" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" name="email" value="{{ employee.email if employee else '' }}" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Phone</label>
+        <input type="text" class="form-control" name="phone" value="{{ employee.phone if employee else '' }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Gender</label>
+        <select class="form-select" name="gender">
+          {% for g in ['Male','Female','Other'] %}
+          <option value="{{ g }}" {{ 'selected' if employee and employee.gender==g }}>{{ g }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Age</label>
+        <input type="number" class="form-control" name="age" value="{{ employee.age if employee else '' }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Department</label>
+        <select class="form-select" name="department_id" required>
+          <option value="">Select Department</option>
+          {% for d in departments %}
+          <option value="{{ d.id }}" {{ 'selected' if employee and employee.department_id==d.id }}>{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Designation</label>
+        <input type="text" class="form-control" name="designation" value="{{ employee.designation if employee else '' }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Manager</label>
+        <select class="form-select" name="manager_id">
+          <option value="">No Manager</option>
+          {% for m in managers %}
+          <option value="{{ m.id }}" {{ 'selected' if employee and employee.manager_id==m.id }}>{{ m.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Status</label>
+        <select class="form-select" name="status">
+          {% for s in ['Active','On Leave','Inactive'] %}
+          <option value="{{ s }}" {{ 'selected' if employee and employee.status==s }}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {% if current_user.is_admin %}
+      <div class="col-md-4">
+        <label class="form-label">Salary</label>
+        <input type="number" step="0.01" class="form-control" name="salary" value="{{ employee.salary if employee else '' }}">
+      </div>
+      {% endif %}
+      <div class="col-md-4">
+        <label class="form-label">Experience (years)</label>
+        <input type="number" step="0.1" class="form-control" name="experience_years" value="{{ employee.experience_years if employee else '' }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Joining Date</label>
+        <input type="date" class="form-control" name="joining_date" value="{{ employee.joining_date if employee else '' }}" {{ 'readonly' if employee }}>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Education</label>
+        <input type="text" class="form-control" name="education" value="{{ employee.education if employee else '' }}">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Address</label>
+        <input type="text" class="form-control" name="address" value="{{ employee.address if employee else '' }}">
+      </div>
+
+      {% if not employee %}
+      <div class="col-md-6">
+        <label class="form-label">Login Username</label>
+        <input type="text" class="form-control" name="username" placeholder="Auto-generated if left blank">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Login Password</label>
+        <input type="password" class="form-control" name="password" placeholder="Default: Employee@123">
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+      <button type="submit" class="btn btn-gradient px-4"><i class="fa-solid fa-check me-1"></i>{{ 'Save Changes' if employee else 'Create Employee' }}</button>
+      <a href="{{ url_for('employees.list_employees') }}" class="btn btn-outline-soft px-4">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

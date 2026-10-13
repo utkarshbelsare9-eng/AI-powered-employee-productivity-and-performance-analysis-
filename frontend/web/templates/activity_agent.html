@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Desktop Activity Tracker{% endblock %}
+{% block page_title %}Desktop Activity Tracker{% endblock %}
+{% block page_subtitle %}System-wide keyboard and mouse activity collection{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card-glass">
+      <h6 class="mb-3"><i class="fa-solid fa-shield-halved me-2 text-primary"></i>Privacy-first activity collection</h6>
+      <p style="font-size:13px;">
+        This optional desktop agent measures activity for productivity analysis without capturing the content of your work.
+      </p>
+      <ul style="font-size:13px;">
+        <li>Keyboard: <strong>press count only</strong> — no key names and no typed text.</li>
+        <li>Mouse: movement, clicks and scroll counts.</li>
+        <li>Idle time: seconds without keyboard/mouse input during each interval.</li>
+        <li>Application: process/app name only; no window/document title.</li>
+        <li>Data is sent as one aggregate record every 60 seconds.</li>
+      </ul>
+      <div class="alert alert-info" style="font-size:12.5px;">
+        Use this only with appropriate employee notice/consent and your organization's applicable privacy and workplace policies.
+      </div>
+
+      <button id="generateAgentToken" class="btn btn-gradient">
+        <i class="fa-solid fa-key me-1"></i>Generate / Regenerate Agent Token
+      </button>
+
+      <div id="tokenBox" class="mt-3" style="display:none;">
+        <label class="form-label" style="font-size:13px;">One-time token</label>
+        <div class="input-group">
+          <input id="agentToken" class="form-control" readonly>
+          <button id="copyToken" class="btn btn-outline-soft" type="button">Copy</button>
+        </div>
+        <small class="text-muted">Store this token in the desktop agent environment. It is not shown again after leaving this page.</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card-glass">
+      <h6 class="mb-3">Run the desktop agent</h6>
+      <ol style="font-size:13px;padding-left:20px;">
+        <li>Install the Python dependencies.</li>
+        <li>Set <code>PRODUCTIVITY_AI_SERVER</code>.</li>
+        <li>Set <code>PRODUCTIVITY_AI_AGENT_TOKEN</code>.</li>
+        <li>Run <code>python desktop_agent/agent.py</code>.</li>
+      </ol>
+      <p class="text-muted" style="font-size:12px;">
+        See <code>desktop_agent/README.md</code> for setup details.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById("generateAgentToken").addEventListener("click", async function () {
+  const r = await fetch("{{ url_for('activity.generate_agent_token') }}", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "X-CSRFToken": document.querySelector('meta[name="csrf-token"]')?.content || ""
+    }
+  });
+  const data = await r.json();
+  if (data.token) {
+    document.getElementById("agentToken").value = data.token;
+    document.getElementById("tokenBox").style.display = "block";
+  } else {
+    alert(data.error || "Could not generate token.");
+  }
+});
+document.getElementById("copyToken").addEventListener("click", async function () {
+  await navigator.clipboard.writeText(document.getElementById("agentToken").value);
+  this.textContent = "Copied";
+  setTimeout(() => this.textContent = "Copy", 1200);
+});
+</script>
+{% endblock %}

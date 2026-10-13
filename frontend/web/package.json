@@ -1,0 +1,19 @@
+{
+  "name": "employee-productivity-ai-web",
+  "version": "1.0.0",
+  "description": "Web frontend interface for AI-Powered Employee Productivity & Performance Analyzer",
+  "private": true,
+  "scripts": {
+    "dev": "python ../../backend/run.py",
+    "start": "python ../../backend/run.py"
+  },
+  "keywords": [
+    "productivity",
+    "hr-analytics",
+    "dashboard",
+    "chartjs",
+    "bootstrap5"
+  ],
+  "author": "ProductivityAI Team",
+  "license": "MIT"
+}

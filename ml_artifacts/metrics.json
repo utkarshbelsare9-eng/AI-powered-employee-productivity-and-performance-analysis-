@@ -1,0 +1,55 @@
+{
+  "accuracy": 0.7333333333333333,
+  "precision": 0.7345202596963161,
+  "recall": 0.7333333333333333,
+  "f1_score": 0.7237687774857309,
+  "cv_mean_accuracy": 0.6925000000000001,
+  "cv_std": 0.02163459164291198,
+  "classes": [
+    "Average",
+    "Excellent",
+    "Good",
+    "Poor"
+  ],
+  "confusion_matrix": [
+    [
+      102,
+      0,
+      17,
+      2
+    ],
+    [
+      0,
+      0,
+      4,
+      0
+    ],
+    [
+      23,
+      0,
+      52,
+      0
+    ],
+    [
+      17,
+      0,
+      1,
+      22
+    ]
+  ],
+  "feature_importance": {
+    "attendance_percent": 0.08580140498659146,
+    "avg_working_hours": 0.05357939338483798,
+    "late_entries": 0.02984157057900698,
+    "leave_days": 0.030658232182497407,
+    "tasks_assigned": 0.06092981935492607,
+    "tasks_completed": 0.06210416596539115,
+    "deadlines_missed": 0.23270122395200246,
+    "overtime_hours": 0.0515172143651204,
+    "customer_rating": 0.11413807254239107,
+    "manager_rating": 0.12363727467081193,
+    "skill_score": 0.09037235701612605,
+    "experience_years": 0.06471927100029701
+  },
+  "n_samples": 1200
+}

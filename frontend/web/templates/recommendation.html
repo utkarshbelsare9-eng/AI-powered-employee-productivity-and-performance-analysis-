@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Recommendations{% endblock %}
+{% block page_title %}AI Recommendations{% endblock %}
+{% block page_subtitle %}Personalized growth &amp; improvement suggestions{% endblock %}
+
+{% block content %}
+{% if select_mode %}
+  <div class="card-glass">
+    <h6 class="mb-3">Select an Employee</h6>
+    <table class="table-modern">
+      <thead><tr><th>Employee</th><th>Department</th><th></th></tr></thead>
+      <tbody>
+      {% for e in employees %}
+        <tr>
+          <td><div class="d-flex align-items-center gap-2"><div class="avatar-circle">{{ e.name[0] }}</div>{{ e.name }}</div></td>
+          <td>{{ e.department.name if e.department else '-' }}</td>
+          <td><a href="{{ url_for('prediction.recommendation', emp_id=e.id) }}" class="btn btn-sm btn-gradient">View Recommendations</a></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="3"><div class="empty-state"><i class="fa-solid fa-lightbulb"></i><p>No employees found.</p></div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+{% else %}
+  <div class="row g-3">
+    <div class="col-lg-4">
+      <div class="card-glass text-center">
+        <div class="avatar-circle mx-auto mb-2" style="width:64px;height:64px;font-size:22px;">{{ emp.name[0] }}</div>
+        <h6 class="mb-0">{{ emp.name }}</h6>
+        <p class="text-muted" style="font-size:12.5px;">{{ emp.designation }}</p>
+        <span class="badge-soft badge-soft-{{ grade_badge_class(result.grade) }} mt-2 d-inline-block">Current Grade: {{ result.grade }}</span>
+      </div>
+    </div>
+    <div class="col-lg-8">
+      <div class="card-glass">
+        <h6 class="mb-3"><i class="fa-solid fa-lightbulb text-warning me-2"></i>Personalized Recommendations</h6>
+        {% for r in result.recommendations %}
+        <div class="d-flex align-items-start gap-3 mb-3 p-3 rounded-3" style="background:var(--bg-body);">
+          <div class="avatar-circle" style="width:32px;height:32px;background:linear-gradient(135deg,#FDCB6E,#e1a63e);flex-shrink:0;">
+            <i class="fa-solid fa-check" style="font-size:12px;"></i>
+          </div>
+          <div style="font-size:13.5px;">{{ r }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

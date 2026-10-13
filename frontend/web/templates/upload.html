@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Upload {{ upload_type }}{% endblock %}
+{% block page_title %}Upload {{ upload_type }}{% endblock %}
+{% block page_subtitle %}Bulk import via CSV file{% endblock %}
+
+{% block content %}
+<div class="card-glass" style="max-width:640px;">
+  <h6 class="mb-3"><i class="fa-solid fa-file-csv text-success me-2"></i>Upload {{ upload_type }}</h6>
+  <p class="text-muted" style="font-size:13px;">Your CSV file should contain the following columns:</p>
+  <div class="chip-list mb-4">
+    {% for c in columns %}
+    <span class="skill-chip">{{ c }}</span>
+    {% endfor %}
+  </div>
+  <form method="POST" enctype="multipart/form-data" data-loading>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="mb-3">
+      <input type="file" class="form-control" name="file" accept=".csv" required>
+    </div>
+    <button type="submit" class="btn btn-gradient px-4"><i class="fa-solid fa-upload me-1"></i>Upload &amp; Import</button>
+  </form>
+</div>
+{% endblock %}

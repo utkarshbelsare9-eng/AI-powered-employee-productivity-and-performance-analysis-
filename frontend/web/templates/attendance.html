@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Attendance{% endblock %}
+{% block page_title %}Attendance{% endblock %}
+{% block page_subtitle %}Track daily presence, hours and punctuality{% endblock %}
+
+{% block content %}
+{% if current_user.is_employee %}
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="stat-card bg-grad-purple"><div class="stat-icon"><i class="fa-solid fa-percent"></i></div><p class="stat-value">{{ attendance_pct }}%</p><p class="stat-label">Attendance Rate</p></div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card bg-grad-blue"><div class="stat-icon"><i class="fa-solid fa-computer-mouse"></i></div><p class="stat-value" id="statMouseHours">0.00h</p><p class="stat-label">Mouse Active Today</p></div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card bg-grad-orange"><div class="stat-icon"><i class="fa-solid fa-keyboard"></i></div><p class="stat-value" id="statKeyboardHours">0.00h</p><p class="stat-label">Keyboard Active Today</p></div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card bg-grad-green"><div class="stat-icon"><i class="fa-solid fa-clock"></i></div><p class="stat-value" id="statTotalHours">0.00h</p><p class="stat-label">Total Tracked Today</p></div>
+    </div>
+  </div>
+  <p class="text-muted mb-4" style="font-size:12.5px;">
+    <i class="fa-solid fa-circle-info me-1"></i>
+    Tracked automatically from mouse and keyboard activity while this app is open in your browser. Today's total updates your working hours above.
+  </p>
+  <div class="card-glass">
+    <h6 class="mb-3">My Attendance History</h6>
+    <table class="table-modern">
+      <thead><tr><th>Date</th><th>Status</th><th>Check-In</th><th>Check-Out</th><th>Hours</th><th>Overtime</th></tr></thead>
+      <tbody>
+      {% for r in records %}
+        <tr>
+          <td>{{ r.date.strftime('%d %b %Y') }}</td>
+          <td><span class="badge-soft badge-soft-{{ 'success' if r.status in ['Present','Work From Home'] else ('warning' if r.status=='Leave' else 'danger') }}">{{ r.status }}</span></td>
+          <td>{{ r.check_in.strftime('%H:%M') if r.check_in else '-' }}</td>
+          <td>{{ r.check_out.strftime('%H:%M') if r.check_out else '-' }}</td>
+          <td>{{ r.working_hours }}</td>
+          <td>{{ r.overtime_hours }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-calendar-xmark"></i><p>No attendance records.</p></div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+{% else %}
+  <div class="card-glass mb-4">
+    <form class="row g-2 align-items-end" method="GET">
+      <div class="col-md-3">
+        <label class="form-label" style="font-size:12px;">Select Date</label>
+        <input type="date" class="form-control" name="date" value="{{ selected_date }}">
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-gradient w-100" type="submit">View</button>
+      </div>
+      <div class="col-md-7 text-end">
+        {% if current_user.is_admin %}
+        <a href="{{ url_for('attendance.upload_attendance') }}" class="btn btn-outline-soft"><i class="fa-solid fa-upload me-1"></i>Upload Attendance CSV</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <div class="card-glass">
+    <h6 class="mb-3">Mark / View Attendance — {{ selected_date }}</h6>
+    <table class="table-modern">
+      <thead><tr><th>Employee</th><th>Current Status</th><th>Hours</th><th>Update</th></tr></thead>
+      <tbody>
+      {% for e in employees %}
+        {% set r = records_by_emp.get(e.id) %}
+        <tr>
+          <td><div class="d-flex align-items-center gap-2"><div class="avatar-circle">{{ e.name[0] }}</div>{{ e.name }}</div></td>
+          <td>{% if r %}<span class="badge-soft badge-soft-{{ 'success' if r.status in ['Present','Work From Home'] else ('warning' if r.status=='Leave' else 'danger') }}">{{ r.status }}</span>{% else %}<span class="badge-soft badge-soft-secondary">Not Marked</span>{% endif %}</td>
+          <td>{{ r.working_hours if r else '-' }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('attendance.mark_attendance') }}" class="d-flex gap-1">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="employee_id" value="{{ e.id }}">
+              <input type="hidden" name="date" value="{{ selected_date }}">
+              <select name="status" class="form-select form-select-sm">
+                {% for s in ['Present','Absent','Leave','Work From Home'] %}
+                <option value="{{ s }}" {{ 'selected' if r and r.status==s }}>{{ s }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-sm btn-gradient">Save</button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="4"><div class="empty-state"><i class="fa-solid fa-users"></i><p>No employees found.</p></div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+{% if current_user.is_employee %}
+<script>
+  function loadActivitySummary() {
+    fetch("/api/activity/summary", { credentials: "same-origin" })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data) return;
+        document.getElementById("statMouseHours").textContent = data.mouse_hours.toFixed(2) + "h";
+        document.getElementById("statKeyboardHours").textContent = data.keyboard_hours.toFixed(2) + "h";
+        document.getElementById("statTotalHours").textContent = data.total_active_hours.toFixed(2) + "h";
+      })
+      .catch(() => {});
+  }
+  loadActivitySummary();
+  setInterval(loadActivitySummary, 30000);
+</script>
+{% endif %}
+{% endblock %}

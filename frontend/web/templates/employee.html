@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Employees{% endblock %}
+{% block page_title %}Employees{% endblock %}
+{% block page_subtitle %}Manage employee records and profiles{% endblock %}
+
+{% block content %}
+<div class="card-glass mb-4">
+  <form class="row g-2 align-items-end" method="GET">
+    <div class="col-md-4">
+      <label class="form-label" style="font-size:12px;">Search</label>
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Name or employee code...">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label" style="font-size:12px;">Department</label>
+      <select name="department" class="form-select">
+        <option value="">All Departments</option>
+        {% for d in departments %}
+        <option value="{{ d.id }}" {{ 'selected' if dept_id==d.id }}>{{ d.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label" style="font-size:12px;">Status</label>
+      <select name="status" class="form-select">
+        <option value="">All Status</option>
+        <option value="Active" {{ 'selected' if status=='Active' }}>Active</option>
+        <option value="On Leave" {{ 'selected' if status=='On Leave' }}>On Leave</option>
+        <option value="Inactive" {{ 'selected' if status=='Inactive' }}>Inactive</option>
+      </select>
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+      <button class="btn btn-gradient w-100" type="submit"><i class="fa-solid fa-filter me-1"></i>Filter</button>
+    </div>
+  </form>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h6 class="mb-0">{{ employees|length }} employee(s) found</h6>
+  {% if current_user.is_admin %}
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('employees.upload_employees') }}" class="btn btn-outline-soft"><i class="fa-solid fa-upload me-1"></i>Upload CSV</a>
+    <a href="{{ url_for('employees.add_employee') }}" class="btn btn-gradient"><i class="fa-solid fa-plus me-1"></i>Add Employee</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="card-glass">
+  <table class="table-modern">
+    <thead>
+      <tr><th>Code</th><th>Name</th><th>Department</th><th>Designation</th><th>Status</th><th>Manager</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+    {% for e in employees %}
+      <tr>
+        <td class="text-muted">{{ e.employee_code }}</td>
+        <td><div class="d-flex align-items-center gap-2"><div class="avatar-circle">{{ e.name[0] }}</div><div><div class="fw-semibold">{{ e.name }}</div><div class="text-muted" style="font-size:11.5px;">{{ e.email }}</div></div></div></td>
+        <td>{{ e.department.name if e.department else '-' }}</td>
+        <td>{{ e.designation or '-' }}</td>
+        <td><span class="badge-soft badge-soft-{{ 'success' if e.status=='Active' else ('warning' if e.status=='On Leave' else 'secondary') }}">{{ e.status }}</span></td>
+        <td>{{ e.manager.name if e.manager else '-' }}</td>
+        <td>
+          <div class="d-flex gap-1">
+            <a href="{{ url_for('employees.view_employee', emp_id=e.id) }}" class="btn btn-sm btn-outline-soft" title="View"><i class="fa-solid fa-eye"></i></a>
+            {% if current_user.is_admin or current_user.is_manager %}
+            <a href="{{ url_for('employees.edit_employee', emp_id=e.id) }}" class="btn btn-sm btn-outline-soft" title="Edit"><i class="fa-solid fa-pen"></i></a>
+            {% endif %}
+            {% if current_user.is_admin %}
+            <form method="POST" action="{{ url_for('employees.delete_employee', emp_id=e.id) }}" onsubmit="return confirm('Delete this employee?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-soft text-danger" title="Delete"><i class="fa-solid fa-trash"></i></button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="7">
+        <div class="empty-state"><i class="fa-solid fa-users"></i><p>No employees found matching your filters.</p></div>
+      </td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
